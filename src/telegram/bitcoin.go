@@ -7,6 +7,14 @@ import (
 	"github.com/shellus/jason"
 )
 
+
+func listenBitcoinQuery(bitcoinQueryChan chan tgbotapi.Update){
+	for update := range bitcoinQueryChan {
+		queryBitcoinPrice(update)
+	}
+}
+
+
 func queryBitcoinPrice(update tgbotapi.Update){
 	var msg tgbotapi.MessageConfig
 	defer func(){
