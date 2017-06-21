@@ -7,8 +7,7 @@ import (
 
 var bot *tgbotapi.BotAPI
 
-// 异步查询比特币chan
-var bitcoinQueryChan = make(chan tgbotapi.Update, 10)
+
 
 func Main() {
 	var err error
@@ -23,10 +22,12 @@ func Main() {
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	// 处理比特币查询请求
-	go listenBitcoinQuery(bitcoinQueryChan)
+	initRoutes()
+	listenUpdates()
+}
 
-	Listen()
+func Init(){
+
 }
 
 

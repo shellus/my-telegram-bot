@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func Listen(){
+func listenUpdates(){
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 

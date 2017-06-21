@@ -5,10 +5,16 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 	"fmt"
 )
+// 异步查询比特币chan
+var bitcoinQueryChan = make(chan tgbotapi.Update, 10)
 
-func init(){
+func initRoutes(){
 	route.Command("start", actionStart)
+
+	// 处理比特币查询请求
+	go listenBitcoinQuery(bitcoinQueryChan)
 	route.Command("bitcoin", actionBitcoin)
+
 	route.Command("default", actionDefault)
 	route.Text("default", actionText)
 
@@ -18,18 +24,21 @@ func init(){
 		bot.Send(msg)
 	})
 }
+
 func actionStart(update tgbotapi.Update){
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID,
 		`/start : 获取命令列表
 		/bitcoin : 查询比特币价格`)
 	bot.Send(msg)
 }
+
 func actionBitcoin(update tgbotapi.Update){
 	bitcoinQueryChan <- update
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "等下，我正在查")
 	msg.ReplyToMessageID = update.Message.MessageID
 	bot.Send(msg)
 }
+
 func actionDefault(update tgbotapi.Update){
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("未知命令：{%s}", update.Message.Command()))
 	msg.ReplyToMessageID = update.Message.MessageID
