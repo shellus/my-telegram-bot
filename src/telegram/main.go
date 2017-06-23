@@ -3,6 +3,7 @@ package telegram
 import (
 	"log"
 	"gopkg.in/telegram-bot-api.v4"
+	"github.com/astaxie/beego/logs"
 )
 
 var bot *tgbotapi.BotAPI
@@ -20,14 +21,9 @@ func Main() {
 
 	//bot.Debug = true
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	logs.Notice("Authorized on account %s", bot.Self.UserName)
 
 	initRoutes()
 	listenUpdates()
 }
-
-func Init(){
-
-}
-
 

@@ -2,8 +2,8 @@ package telegram
 
 import (
 	"gopkg.in/telegram-bot-api.v4"
-	route"github.com/shellus/my-telegram-bot/src/telegram/command_route"
-	"log"
+	route"github.com/shellus/my-telegram-bot/src/telegram/route"
+	"github.com/astaxie/beego/logs"
 )
 
 func listenUpdates(){
@@ -12,6 +12,7 @@ func listenUpdates(){
 
 	updates, err := bot.GetUpdatesChan(u)
 	if err != nil {
+		logs.Alert("bot.GetUpdatesChan(u) err: %#v", err)
 		panic(err)
 	}
 
@@ -19,8 +20,7 @@ func listenUpdates(){
 		if update.Message == nil {
 			continue
 		}
-
-		log.Printf("[%s] %s %d", update.Message.From.String(), update.Message.Text, update.Message.Chat.ID)
 		route.Handle(update)
+
 	}
 }

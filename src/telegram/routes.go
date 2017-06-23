@@ -1,7 +1,7 @@
 package telegram
 
 import (
-	route "github.com/shellus/my-telegram-bot/src/telegram/command_route"
+	route "github.com/shellus/my-telegram-bot/src/telegram/route"
 	"gopkg.in/telegram-bot-api.v4"
 	"fmt"
 )
@@ -9,26 +9,22 @@ import (
 var bitcoinQueryChan = make(chan tgbotapi.Update, 10)
 
 func initRoutes(){
-	route.Command("start", actionStart)
+	route.Commands.Add("/start", actionStart).SetComment("获取命令列表")
 
 	// 处理比特币查询请求
 	go listenBitcoinQuery(bitcoinQueryChan)
-	route.Command("bitcoin", actionBitcoin)
+	route.Commands.Add("/bitcoin", actionBitcoin).SetComment("查询比特币价格")
 
-	route.Command("default", actionDefault)
-	route.Text("default", actionText)
+	route.Commands.Default(actionDefault)
 
-	route.Text("哈哈", func (update tgbotapi.Update){
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "哈毛线啊")
-		msg.ReplyToMessageID = update.Message.MessageID
-		bot.Send(msg)
-	})
+
+	route.Texts.Add("哈哈", actionHAHA)
+
+	route.Texts.Add("default", actionText)
 }
 
 func actionStart(update tgbotapi.Update){
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID,
-		`/start : 获取命令列表
-		/bitcoin : 查询比特币价格`)
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, route.GetCommandHelpStr())
 	bot.Send(msg)
 }
 
@@ -45,6 +41,11 @@ func actionDefault(update tgbotapi.Update){
 	bot.Send(msg)
 }
 
+func actionHAHA (update tgbotapi.Update){
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "哈毛线啊")
+	msg.ReplyToMessageID = update.Message.MessageID
+	bot.Send(msg)
+}
 func actionText(update tgbotapi.Update){
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "哦，你在说什么啊？")
 	msg.ReplyToMessageID = update.Message.MessageID
