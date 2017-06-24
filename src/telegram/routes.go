@@ -16,10 +16,10 @@ func initRoutes(){
 
 	route.Command("/random_read", app.ActionRandomRead).SetComment("随机看书")
 
-	route.Commands.Default(app.ActionDefault)
+	route.CommandDefault(app.ActionDefault)
 
 
 	route.Text("哈哈", app.ActionHAHA)
 
-	route.Text("default", app.ActionText)
+	route.TextDefault(app.ActionText)
 }

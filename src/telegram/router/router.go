@@ -32,8 +32,10 @@ func (r *router) Add(expr string, handle func(update tgbotapi.Update)) (ro *Rout
 	r.routes = append(r.routes, ro)
 	return
 }
-func (r *router) Default(handle func(update tgbotapi.Update)) {
+func (r *router) Default(handle func(update tgbotapi.Update)) (ro *Route) {
 	r.def = &Route{Pattern:"", Handle:handle}
+	ro = r.def
+	return
 }
 
 func (r *router) Routes() (routes []*Route) {

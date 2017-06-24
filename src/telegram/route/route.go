@@ -10,15 +10,21 @@ import (
 )
 
 
-var Commands = router.NewRouter()
-var Texts = router.NewRouter()
+var commands = router.NewRouter()
+var texts = router.NewRouter()
 
 func Command(pattern string, handle func(update tgbotapi.Update)) (*router.Route) {
 	pattern = fmt.Sprintf(`^%s(.*?)$`, pattern)
-	return Commands.Add(pattern, handle)
+	return commands.Add(pattern, handle)
+}
+func CommandDefault(handle func(update tgbotapi.Update)) (*router.Route) {
+	return commands.Default(handle)
 }
 func Text(pattern string, handle func(update tgbotapi.Update)) (*router.Route) {
-	return Texts.Add(pattern, handle)
+	return texts.Add(pattern, handle)
+}
+func TextDefault(handle func(update tgbotapi.Update)) (*router.Route) {
+	return texts.Default(handle)
 }
 
 //
@@ -32,9 +38,9 @@ func Dispatch(update tgbotapi.Update) {
 		err error
 	)
 	if uri[0:1] == "/" {
-		ro, err = Commands.Dispatch(uri)
+		ro, err = commands.Dispatch(uri)
 	} else {
-		ro, err = Texts.Dispatch(uri)
+		ro, err = texts.Dispatch(uri)
 	}
 
 	if err != nil {
@@ -49,7 +55,7 @@ func GetCommandHelpStr() (string) {
 
 	const letter string = `{{.Pattern}} : {{.Comment}}` + "\n"
 	t := template.Must(template.New("letter").Parse(letter))
-	for _, r := range Commands.Routes() {
+	for _, r := range commands.Routes() {
 		t.Execute(help, r)
 	}
 
