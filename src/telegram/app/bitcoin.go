@@ -1,14 +1,16 @@
-package telegram
+package app
 
 import (
 	"gopkg.in/telegram-bot-api.v4"
 	"fmt"
 	"net/http"
 	"github.com/antonholmquist/jason"
+	"github.com/shellus/my-telegram-bot/src/telegram/bot"
 )
 
+var BitcoinQueryChan = make(chan tgbotapi.Update, 10)
 
-func listenBitcoinQuery(bitcoinQueryChan chan tgbotapi.Update){
+func ListenBitcoinQuery(bitcoinQueryChan chan tgbotapi.Update){
 	for update := range bitcoinQueryChan {
 		queryBitcoinPrice(update)
 	}
@@ -21,7 +23,7 @@ func queryBitcoinPrice(update tgbotapi.Update){
 		if r := recover(); r != nil{
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "查询出错了")
 			msg.ReplyToMessageID = update.Message.MessageID
-			bot.Send(msg)
+			bot.Bot.Send(msg)
 		}
 	}()
 
@@ -49,5 +51,5 @@ func queryBitcoinPrice(update tgbotapi.Update){
 
 	msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("localbitcoins.com\n最低买入: ￥%s\n最高出售: ￥%s", price_sell_low, price_buy_high))
 	msg.ReplyToMessageID = update.Message.MessageID
-	bot.Send(msg)
+	bot.Bot.Send(msg)
 }

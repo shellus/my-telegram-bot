@@ -1,46 +1,68 @@
 package router
 
-import "gopkg.in/telegram-bot-api.v4"
+import (
+	"gopkg.in/telegram-bot-api.v4"
+	"regexp"
+	"github.com/pkg/errors"
+	"fmt"
+	"github.com/astaxie/beego/logs"
+)
 
-type route struct {
+type Route struct {
 	Pattern string
 	Comment string
 	Handle  func(update tgbotapi.Update)
 }
 type router struct {
-	def    *route
-	routes []*route
+	def    *Route
+	routes []*Route
 }
 
-func NewRouter() (r *router) {
+func NewRouter() (*router) {
 	return &router{}
 }
 
-func (r *route) SetComment(str string) (ro *route) {
+func (r *Route) SetComment(str string) (ro *Route) {
 	r.Comment = str
 	ro = r
 	return
 }
-func (r *router) Add(pattern string, handle func(update tgbotapi.Update)) (ro *route) {
-	ro = &route{Pattern:pattern, Handle:handle}
+func (r *router) Add(expr string, handle func(update tgbotapi.Update)) (ro *Route) {
+	ro = &Route{Pattern:expr, Handle:handle}
 	r.routes = append(r.routes, ro)
 	return
 }
 func (r *router) Default(handle func(update tgbotapi.Update)) {
-	r.def = &route{Pattern:"", Handle:handle}
+	r.def = &Route{Pattern:"", Handle:handle}
 }
 
-func (r *router) Routes() (routes []*route) {
+func (r *router) Routes() (routes []*Route) {
 	routes = r.routes
 	return
 }
 
-func (r *router) Handle(update tgbotapi.Update) {
+func (r *router) Dispatch(uri string)(ro *Route, err error) {
+
+	logs.Debug("router Dispatch start uri: %s", uri)
+	// 正则匹配路由
 	for _, i := range r.routes {
-		if i.Pattern == update.Message.Text {
-			i.Handle(update)
+		var ip *regexp.Regexp
+		ip, err = regexp.Compile(i.Pattern)
+		if err != nil {
+			return
+		}
+		if  ip.MatchString(uri) {
+			logs.Debug("router Dispatch hit pattern: %s", i.Pattern)
+			ro = i
 			return
 		}
 	}
-	r.def.Handle(update)
+
+	// 404
+	if r.def != nil {
+		ro = r.def
+		return
+	}else {
+		return nil, errors.New(fmt.Sprintf("no def handle uri: %v", uri))
+	}
 }

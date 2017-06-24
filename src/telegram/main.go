@@ -4,16 +4,14 @@ import (
 	"log"
 	"gopkg.in/telegram-bot-api.v4"
 	"github.com/astaxie/beego/logs"
+	"github.com/shellus/my-telegram-bot/src/telegram/bot"
 )
-
-var bot *tgbotapi.BotAPI
-
 
 
 func Main() {
 	var err error
 
-	bot, err = tgbotapi.NewBotAPI(gettoken())
+	bot.Bot, err = tgbotapi.NewBotAPI(gettoken())
 
 	if err != nil {
 		log.Panic(err)
@@ -21,7 +19,7 @@ func Main() {
 
 	//bot.Debug = true
 
-	logs.Notice("Authorized on account %s", bot.Self.UserName)
+	logs.Notice("Authorized on account %s", bot.Bot.Self.UserName)
 
 	initRoutes()
 	listenUpdates()
