@@ -1,13 +1,12 @@
 package user
 
 import (
-	"gopkg.in/telegram-bot-api.v4"
-	"github.com/jmoiron/sqlx"
-	"encoding/json"
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/orm"
 	_"github.com/mattn/go-sqlite3"
+	"gopkg.in/telegram-bot-api.v4"
+	"encoding/json"
+	"time"
 )
-var db *sqlx.DB
 
 var _ = `
 CREATE TABLE "users"
@@ -15,12 +14,15 @@ CREATE TABLE "users"
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chat_id INTEGER NOT NULL,
     chat_meta TEXT
-);
+, created_at DATETIME NULL, updated_at DATETIME NULL);
 CREATE UNIQUE INDEX users_chat_id_uindex ON "users" (chat_id)
 `
-
+var DB orm.Ormer
 func init(){
-	var err error
+	orm.RegisterModel(new(User))
+
+	//  mysql / sqlite3 / postgres 这三种是默认已经注册过的，所以可以无需设置
+	//orm.RegisterDriver("sqlite3", orm.DRSqlite)
 
 	//test.db
 	//file:test.db?cache=shared&mode=memory
@@ -28,48 +30,35 @@ func init(){
 	//file::memory:
 
 	// todo db path
-	db, err = sqlx.Connect("sqlite3", `file:bin/telegram.sqlite3`)
+	err := orm.RegisterDataBase("default", "sqlite3", `file:C:\Users\shellus\go\src\github.com\shellus\my-telegram-bot\bin\telegram.sqlite3`)
 	if err != nil {
 		panic(err)
 	}
+	DB = orm.NewOrm()
 }
+type ChatMetaJson string
 type User struct {
 	Id int64
 	Chat_id int64
-	TgChat *tgbotapi.Chat
+	Chat_meta ChatMetaJson
+	chat *tgbotapi.Chat `orm:"-"`
+
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime)"`
 }
 
-func Create(u *User)(uR *User){
-	c, err :=  json.Marshal(u.TgChat)
-	if err != nil {
-		panic(c)
-	}
-	u.Id, err = db.MustExec("INSERT INTO users (chat_id, chat_meta) VALUES ($1, $2);", u.Chat_id, string(c)).LastInsertId()
-	if err != nil {
-		panic(c)
-	}
-	uR = u
-	return
-}
-func FindChatId(id int64)(u *User, err error) {
-	var chatJs = ""
-	u = &User{TgChat:&tgbotapi.Chat{}}
-	err = db.QueryRow("SELECT * FROM users WHERE chat_id=$1", id).Scan(&u.Id, &u.Chat_id, &chatJs)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal([]byte(chatJs), u.TgChat)
-	if err != nil {
-		logs.Error(chatJs)
-		panic(err)
-	}
-	return
+func (u *User) TableName() string {
+	return "users"
 }
 
-func (u *User) Delete()(bool){
-	rows, err := db.MustExec("DELETE FROM users WHERE id = $1;", u.Id).RowsAffected()
-	if err != nil {
-		panic(err)
+func (u *User) Chat()(*tgbotapi.Chat){
+	chat := new(tgbotapi.Chat)
+	if u.chat == nil {
+		err := json.Unmarshal([]byte(u.Chat_meta), &chat)
+		if err != nil {
+			panic(err)
+		}
+		u.chat = chat
 	}
-	return rows != 1
+	return u.chat
 }

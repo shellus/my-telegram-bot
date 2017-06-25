@@ -29,9 +29,12 @@ func listenUpdates(){
 }
 
 func checkUser(chat *tgbotapi.Chat){
-	u, err := user.FindChatId(chat.ID)
+
+	u := &user.User{Chat_id:chat.ID}
+	_, _, err := user.DB.ReadOrCreate(u, "Chat_id")
 	if err != nil {
-		u = user.Create(&user.User{Chat_id:chat.ID, TgChat:chat})
+		panic(err)
 	}
+	user.DB.Update(u, "UpdatedAt")
 	fmt.Println(u.Id)
 }
