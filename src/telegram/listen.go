@@ -5,6 +5,8 @@ import (
 	"github.com/shellus/my-telegram-bot/src/telegram/route"
 	"github.com/astaxie/beego/logs"
 	"github.com/shellus/my-telegram-bot/src/telegram/bot"
+	"github.com/shellus/my-telegram-bot/src/telegram/model/user"
+	"fmt"
 )
 
 func listenUpdates(){
@@ -21,6 +23,15 @@ func listenUpdates(){
 		if update.Message == nil {
 			continue
 		}
+		checkUser(update.Message.Chat)
 		route.Dispatch(update)
 	}
+}
+
+func checkUser(chat *tgbotapi.Chat){
+	u, err := user.FindChatId(chat.ID)
+	if err != nil {
+		u = user.Create(&user.User{Chat_id:chat.ID, TgChat:chat})
+	}
+	fmt.Println(u.Id)
 }

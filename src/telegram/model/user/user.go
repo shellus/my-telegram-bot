@@ -1,9 +1,11 @@
-package model
+package user
 
 import (
 	"gopkg.in/telegram-bot-api.v4"
 	"github.com/jmoiron/sqlx"
 	"encoding/json"
+	"github.com/astaxie/beego/logs"
+	_"github.com/mattn/go-sqlite3"
 )
 var db *sqlx.DB
 
@@ -37,7 +39,7 @@ type User struct {
 	TgChat *tgbotapi.Chat
 }
 
-func Create(u *User)(bool){
+func Create(u *User)(uR *User){
 	c, err :=  json.Marshal(u.TgChat)
 	if err != nil {
 		panic(c)
@@ -46,7 +48,22 @@ func Create(u *User)(bool){
 	if err != nil {
 		panic(c)
 	}
-	return true
+	uR = u
+	return
+}
+func FindChatId(id int64)(u *User, err error) {
+	var chatJs = ""
+	u = &User{TgChat:&tgbotapi.Chat{}}
+	err = db.QueryRow("SELECT * FROM users WHERE chat_id=$1", id).Scan(&u.Id, &u.Chat_id, &chatJs)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal([]byte(chatJs), u.TgChat)
+	if err != nil {
+		logs.Error(chatJs)
+		panic(err)
+	}
+	return
 }
 
 func (u *User) Delete()(bool){
